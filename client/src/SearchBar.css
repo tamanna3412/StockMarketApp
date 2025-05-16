@@ -1,0 +1,22 @@
+#search-input{
+    size: 100  
+}
+input{
+    width: 300px;
+    height: 32px;
+    font-size: large;
+    font-weight: 150;
+}
+.leftAlign{
+    text-align: left;
+}
+.rightAlign{
+    text-align: right;
+}
+#suggestions-container{
+    width: 300px;
+}
+.suggestion{
+    display: flex;
+    justify-content: space-between;
+}

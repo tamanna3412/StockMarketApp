@@ -1,0 +1,31 @@
+.userSearch{
+    display: flex;
+    flex-direction: column;
+}
+.entry{
+    display: flex;
+    justify-content: space-between;
+}
+.userSearchGrid{
+    display: grid;
+    grid-template-columns: auto auto auto;
+    text-align: left;
+    gap: 20px;
+}
+.Details{
+    position: relative;
+    border: 1px solid black;
+}
+#x {
+    position: absolute;
+    background: gray;
+    color: white;
+    top: 0px;
+    right: 0px;  
+}
+form{
+    display: inline;
+}
+/* .cancelButton{
+    display: inline;
+} */

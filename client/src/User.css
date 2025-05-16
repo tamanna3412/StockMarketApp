@@ -1,0 +1,29 @@
+.grid-container{
+    display: grid;
+    grid-template-columns: 45% 45% 10%;
+    border-bottom: 1px solid black;
+}
+.grid-container h3{
+margin-top: 0;
+margin-bottom: 0;
+}
+#info{
+    grid-column: 3;
+  grid-row: 1 / span 2;
+}
+.rowOne{
+    text-align: left;
+}
+.rowTwo{
+    text-align: right;
+}
+.stockData{
+    display: flex;
+    gap: 20px;
+}
+.storedData{
+    border: 1px solid black;
+}
+.searchData{
+    border: 1px solid black;
+}
