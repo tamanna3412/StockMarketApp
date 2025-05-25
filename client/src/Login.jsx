@@ -7,6 +7,7 @@ function LoginSection(){
     const [[userId,pass],setFormValue] = useState(['',''])
     const [register, setRegister] = useState(false)
     const navigate = useNavigate();
+    const backendBaseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL;
 
     const handleSubmit = async (e)=>{
         e.preventDefault();
@@ -17,39 +18,28 @@ function LoginSection(){
         if(e.target.password.value)
         {
             try{    
-                const requestParameters = await fetch('http://localhost:3000?' + new URLSearchParams({
+                const requestParameters = await fetch(`${backendBaseUrl}/login?` + new URLSearchParams({
                     username: e.target.username.value,
                     password: e.target.password.value,
-                }).toString())
+                }).toString(),{
+                    method: 'GET',
+                    credentials: 'include'
+                })
             
                 const checkResponse = await requestParameters.json();
                 console.log(checkResponse);
 
-                if(checkResponse.error){
-                    setIncorrectPassword(false);
-                    
+                if(checkResponse.error!=''){
+                    setIncorrectPassword(false);        
                 }
                 else{
-                    navigate('/user', { state: { user: checkResponse } });
+                    navigate('/user');
                 }
                 
-                // const backendResponse = await fetch('http://localhost:3000');
-            
-                // const check = await backendResponse.json();
-                // console.log(check);
-                //console.log(check.text());
-                // console.log(backendResponse)
-
-                // console.log(backendResponse.text())
-                // if(backendResponse.ok){
-                //const data = await backendResponse;
-                //console.log("backendResponse : "+ data);
-                // }
             }
             catch(error){
                 console.log(error)
             }
-            // const data = await backendResponse.json();
         }
     }
 

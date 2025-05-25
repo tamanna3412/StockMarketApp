@@ -27,3 +27,13 @@ margin-bottom: 0;
 .searchData{
     border: 1px solid black;
 }
+.User{
+    position: relative;
+}
+.x {
+    position: absolute;
+    background: gray;
+    color: white;
+    top: 0px;
+    right: -100px;  
+}

@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from "react";
+import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import LoginSection from "./Login";
 import "./app.css";
@@ -8,8 +9,10 @@ function Container(){
     const [apiResTwo, setApiResTwo] = useState(false);
     const [[topGainers, topLosers, highestTraded], setTopGainers] = useState([[],[],[]]);
     const [tickerData, setTickerData] = useState([]);
+    const navigate = useNavigate();
     const apiKey = import.meta.env.VITE_APP_API_KEY;
     const baseUrl = import.meta.env.VITE_APP_API_BASE_URL;
+    const backendBaseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL;
 
     const tryGettingData = async ()=>{
         try{
@@ -62,7 +65,7 @@ function Container(){
                     apikey:apiKey
                 }
             });
-            // let realData = response.data.data;
+            
             let realData = response.data;
             console.log(realData)
             if(realData)
@@ -139,12 +142,32 @@ function Container(){
 
 
     useEffect(()=>{
-        tryGettingData();
+        async function initialSetup(){
+            try{
+                const userLoggedIn = await fetch(`${backendBaseUrl}/checkLoggedInUser`,{
+                    method: 'GET',
+                    credentials: 'include'
+                })
+                const response = await userLoggedIn.json();
+                if(response.isLoggedIn)
+                {
+                    // navigate('/user', { state: { user: response.user } });
+                    navigate('/user');
+                }
+                else{
+                    tryGettingData();
+                }
+                }
+                catch(err)
+                {
+                    console.log(err)
+                }
+        }
+        initialSetup();
     },[]);
 
     useEffect(()=>{
         let ss = topGainers.map(t=>t.ticker).join(',') +","+ topLosers.map(t=>t.ticker).join(',') +","+ highestTraded.map(t=>t.ticker).join(',')
-        console.log("UseEffect")
         realTimeData(ss);
         const intervalId = setInterval(() => {
             realTimeData(ss);

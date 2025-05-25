@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState , useEffect} from 'react';
+import { useNavigate } from 'react-router-dom';
 import UserStockData from './UserStockDetails';
 import SearchBar from './SearchBar';
 import UserSearch from './UserSearch';
@@ -7,30 +7,53 @@ import "./User.css";
 
 
 const User = () => {
-  const location = useLocation();
-  const { user } = location.state || {}; // fallback in case of direct access
+  const navigate = useNavigate();
+  const [user, setUser] = useState({})
   const [roiData, changeRoiData] = useState('')
+  const [serverResponse, setServerResponse] = useState(false)
   const [searchedData, setSearchedData] = useState(false)
   const [symbol, setSymbol] = useState('');
+  const broadCast = import.meta.env.VITE_APP_PERSISTENT_SESSION
+  const backendBaseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL;
+  const channel = new BroadcastChannel(broadCast);
 
-  if (!user) return (
-  <div className="grid-container">
-    <h3>ticker</h3>
-    <h3>currentRate</h3>
-    <div><button>Buy</button></div>
-    <div>
-        <div>quantity @ average</div>
-        <div>quantity * average</div>
-    </div>
-    <div>
-        <div>profit/loss</div>
-        <div>quantity*(profit/loss)</div>
-    </div>
-    <div><button>Sell</button></div>
-    </div>
-  );
+  async function UserDetails(){
+    try{
+      const userStock = await fetch(`${backendBaseUrl}/user`,{
+        method: 'GET',
+        credentials: 'include'
+      })
+      const checkResponse = await userStock.json();
+      console.log(checkResponse)
+      if(checkResponse.isLoggedIn){
+        setUser({name:checkResponse.name, email: checkResponse.email, data:checkResponse.data})
+        setServerResponse(true)
+      }
+      else{
+        console.log("inside user.jsx")
+        navigate('/');
+      }
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
 
-  console.log(user);
+  useEffect(()=>{
+    UserDetails();
+  },[])
+
+  useEffect(()=>{
+    channel.onmessage = (event) => {
+      if (event.data.type === 'LOGOUT') {
+        setServerResponse(false)
+        setUser({})
+        navigate('/');
+      } 
+    };
+  
+    return () => channel.close();
+  },[])
 
   function Investment(props){
     changeRoiData(`Your return on Investment is ${props}`);
@@ -46,23 +69,44 @@ const User = () => {
     setSearchedData(false);
   }
 
+  async function logoutUser(){
+    try{    
+      const requestParameters = await fetch(`${backendBaseUrl}/logout`,{
+        method: 'GET',
+        credentials: 'include'
+      })
+  
+      console.log("Backend response Headers Logout Request : "+JSON.stringify(requestParameters.headers))
+      const checkResponse = await requestParameters.json();
+      console.log(checkResponse);
+      if(checkResponse.result==='ok'){
+        setServerResponse(false)
+        setUser({})
+        channel.postMessage({type:'LOGOUT'});
+        navigate('/');
+      }
+    }
+    catch(error){
+        console.log(error)
+    }
+  }
+
+if(serverResponse){
   return (
-    <div>
+    <div className='User'>
+      <button className = "x" onClick={logoutUser}>logout</button>
       <h1>Hi {user.name}!</h1>
       <SearchBar search={TickerSearch}/>
       <div className='stockData'>
-        {/* <div className='storedData'>
+        {
+          (searchedData) ? <UserSearch stockDetails={user.data} companyDetails={symbol} removeData={RemoveTickerSearch}/>: <div className='storedData'>
           <h2>{roiData}</h2>
-          { (user.data.length===0) ? <p>you do not have any stock</p> : <UserStockData stockDetails={user.data} invest={Investment}/>}
-        </div> */}
-        {(searchedData) ? <UserSearch stockDetails={user.data} companyDetails={symbol} removeData={RemoveTickerSearch}/>: <div className='storedData'>
-          <h2>{roiData}</h2>
-          { (user.data.length===0) ? <p>you do not have any stock</p> : <UserStockData stockDetails={user.data} invest={Investment} search={TickerSearch}/>}
-        </div>}
-        {/* <div className='searchData'>{searchedData && <UserSearch companyDetails={symbol} />}</div> */}
+          { (user.data.length===0) ? <p>you do not have any stock</p> : <UserStockData stockDetails={user.data} invest={Investment} search={TickerSearch}/>}</div>
+        }
       </div>
     </div>
   );
+}
 };
 
 export default User;

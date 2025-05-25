@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from "react";
+import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import "./UserSearch.css"
 
@@ -12,8 +13,10 @@ function UserSearch(props){
     const [transaction, setTransaction] = useState('');
     const [confirmation, askConfirmation] = useState('');
     const [finalRate, setFinalRate] = useState(0);
+    const navigate = useNavigate();
     const apiKey = import.meta.env.VITE_APP_API_KEY;
     const baseUrl = import.meta.env.VITE_APP_API_BASE_URL;
+    const backendBaseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL;
 
     const companyRealTimeData = async (e)=>{
         try{
@@ -84,7 +87,6 @@ function UserSearch(props){
     function PortfolioStock(){
         const stock = props.stockDetails.find(e => e.ticker===companyInfo.Symbol)
         if(stock){
-            //setfolioStock(true);
             return (<div>
             <div>
                 <div>Total Invested : {stock.shares*parseFloat(stock.average_amount.slice(1))} ({stock.shares} @ {stock.average_amount})</div>
@@ -94,11 +96,9 @@ function UserSearch(props){
             </div>)
         }
         else{
-            //setfolioStock(false);
             return (<div>
                 {(buttonClick)? Transact():(<div><button onClick={handleClick}>Buy</button></div>)}
             </div>)
-            //return ({(buttonClick) ? Transact():(<div><button onClick={handleClick}>Buy</button></div>)})
         }
     }
 
@@ -106,8 +106,6 @@ function UserSearch(props){
 
         companyRealTimeData(props.companyDetails.ticker);
         companyData(props.companyDetails.ticker)
-        //makeDeal(false);
-        //setfolioStock(false);
         setButtonClick(false)
         setTransaction('');
         askConfirmation('')
@@ -115,7 +113,7 @@ function UserSearch(props){
 
         const intervalId = setInterval(() => {
             companyRealTimeData(props.companyDetails.ticker);
-        }, 60 * 1000); // 5 minutes
+        }, 60 * 1000); // 1 minute
 
         return () => clearInterval(intervalId);
     },[props])
@@ -124,7 +122,6 @@ function UserSearch(props){
 
         onShareChange()
 
-        // return () => clearInterval(intervalId);
     },[intraDay, companyInfo])
 
     function handleClick(e){
@@ -133,9 +130,8 @@ function UserSearch(props){
         setButtonClick(true);
     }
 
-    function updateBackend(e){
+    async function updateBackend(e){
         e.preventDefault();
-        console.log("now is the main task")
         try{
             // call backend
             const requestBody = {
@@ -147,19 +143,44 @@ function UserSearch(props){
                 transaction : transaction
             };
 
-            console.log(requestBody)
-            // const response = await fetch('http://localhost:3000/update', {
-            //                   method: "POST",
-            //                   headers: {
-            //                     "Content-Type": "application/json",
-            //                   },
-            //                   body: JSON.stringify(requestBody)
-            //                 });
-
-            // const checkResponse = await response.json();
-            // console.log(checkResponse);
-            askConfirmation('');
-            setButtonClick(false)
+            const myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            const stock = props.stockDetails.find(e => e.ticker===requestBody.ticker);
+            let method;
+            if(transaction==='Buy'){
+                if(stock){
+                    method = 'PATCH'
+                }
+                else{
+                    method = 'POST'
+                }
+                console.log(requestBody)
+                const editStock = await fetch(`${backendBaseUrl}/buy`,{
+                        method: method,
+                        credentials: 'include',
+                        headers:myHeaders,
+                        body: JSON.stringify(requestBody)
+                })
+                const respnse = await editStock.json();
+                navigate('/')
+            }
+            else{
+                let method;
+                if(stock.shares==requestBody.newShares){
+                    method = 'DELETE'
+                }
+                else{
+                    method = 'PATCH'
+                }
+                const editStock = await fetch(`${backendBaseUrl}/sell`,{
+                        method: method,
+                        credentials: 'include',
+                        headers:myHeaders,
+                        body: JSON.stringify(requestBody)
+                })
+                const respnse = await editStock.json();
+                navigate('/')
+            }
         }
         catch(err)
         {
@@ -170,10 +191,6 @@ function UserSearch(props){
     function onShareChange()
     {
 
-        console.log("intraDay :"+JSON.stringify(intraDay));
-        console.log("symbol :"+companyInfo.Symbol);
-        console.log("prefix :"+transaction);
-        console.log("------------")
         const inputValue = document.getElementById('quantity');
         if(inputValue){
             console.log(inputValue.value);
@@ -202,7 +219,6 @@ function UserSearch(props){
     }
 
     function handleCancel(){
-        //makeDeal(false);
         askConfirmation('');
         setButtonClick(false)
     }
@@ -234,24 +250,6 @@ function UserSearch(props){
                 <h3>{intraDay.close} <span className="noBold">{companyInfo.Currency}</span></h3>
                 <p>{intraDay.change} ({intraDay.changePercent}%)</p>
                 <br></br>
-                {/* <div className="userSearch">
-                    <div className="entry">
-                        <div>open : {intraDay.open}</div>
-                        <div>52-wk-high : {props.companyDetails['52WeekHigh']}</div>
-                        <div>Mkt cap : {props.companyDetails['MarketCapitalization']}</div>
-                    </div>
-                    <div className="entry">
-                        <div>high : {intraDay.high}</div>
-                        <div>52-wk-low : {props.companyDetails['52WeekLow']}</div>
-                        <div>P/E Ratio : {props.companyDetails['PERatio']}</div>
-                    </div>
-                    <div className="entry">
-                        <div>low : {intraDay.low}</div>
-                        <div>Div Yield : {props.companyDetails['DividendYield']}</div>
-                        <div>EBITA : {props.companyDetails['EBITDA']}</div>
-                    </div>
-                </div>
-                <br></br>*/}
                 <div className="userSearchGrid">
                     <div className="entryGrid">
                         <div>open : {intraDay.open}</div>
@@ -273,9 +271,6 @@ function UserSearch(props){
                 {
                     PortfolioStock()
                 }
-                {/* {
-                    (folioStock)? ((<div><button onClick={handleClick}>Buy</button><span>     </span><button onClick={handleClick}>Sell</button></div>)) : (<div><button onClick={handleClick}>Buy</button></div>)
-                } */}
             </div>
         );
     }
