@@ -89,6 +89,45 @@ app.get("/login", async (req, res)=>{
     res.send(response)
 });
 
+app.post("/register", async(req, res)=>{
+    try{
+    console.log("post register request")
+    let reqBody = req.body;
+    let respnseMessage = {error:'',name:'',email:'',isLoggedIn:false}
+    if(!(isEmpty(reqBody))){
+        const checkIfExist = await db.query("SELECT username,email from credentials WHERE username = $1 OR email = $2",[reqBody.UserName, reqBody.Email])
+        console.log("rowCount : "+checkIfExist.rowCount)
+        
+        if(checkIfExist.rowCount===0){
+            const newUser = await db.query('INSERT INTO credentials (name, username, password, email) VALUES ($1,$2,$3,$4) RETURNING *',[`${reqBody.FirstName} ${reqBody.LastName}`,reqBody.UserName, reqBody.PassWord, reqBody.Email])
+            if(newUser.rows.length===1){
+                console.log(newUser.rows[0])
+                respnseMessage.name = newUser.rows[0].name
+                respnseMessage.email = newUser.rows[0].email
+                respnseMessage.isLoggedIn = true
+                req.session.isLoggedIn = true;
+                req.session.user = {name:respnseMessage.name, email:respnseMessage.email}   
+            }
+        }
+        else{
+            let sqlResponse = checkIfExist.rows[0]
+            if(sqlResponse.username===reqBody.UserName){
+                respnseMessage.error = 'Username not available'
+            }
+            else{
+                respnseMessage.error = 'Email already registered'
+            }
+        }
+        
+    }
+    else respnseMessage.error = 'Request body is empty'
+    res.send(respnseMessage)
+    }
+    catch(err){
+        console.log(err);
+    }
+});
+
 app.get("/user",async (req,res)=>{
     try
     {

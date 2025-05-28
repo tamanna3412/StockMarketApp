@@ -30,7 +30,6 @@ const User = () => {
         setServerResponse(true)
       }
       else{
-        console.log("inside user.jsx")
         navigate('/');
       }
     }
@@ -76,7 +75,6 @@ const User = () => {
         credentials: 'include'
       })
   
-      console.log("Backend response Headers Logout Request : "+JSON.stringify(requestParameters.headers))
       const checkResponse = await requestParameters.json();
       console.log(checkResponse);
       if(checkResponse.result==='ok'){
@@ -99,7 +97,7 @@ if(serverResponse){
       <SearchBar search={TickerSearch}/>
       <div className='stockData'>
         {
-          (searchedData) ? <UserSearch stockDetails={user.data} companyDetails={symbol} removeData={RemoveTickerSearch}/>: <div className='storedData'>
+          (searchedData) ? <UserSearch stockDetails={user} companyDetails={symbol} removeData={RemoveTickerSearch}/>: <div className='storedData'>
           <h2>{roiData}</h2>
           { (user.data.length===0) ? <p>you do not have any stock</p> : <UserStockData stockDetails={user.data} invest={Investment} search={TickerSearch}/>}</div>
         }

@@ -85,7 +85,7 @@ function UserSearch(props){
     }
 
     function PortfolioStock(){
-        const stock = props.stockDetails.find(e => e.ticker===companyInfo.Symbol)
+        const stock = props.stockDetails.data.find(e => e.ticker===companyInfo.Symbol)
         if(stock){
             return (<div>
             <div>
@@ -135,7 +135,7 @@ function UserSearch(props){
         try{
             // call backend
             const requestBody = {
-                email : props.stockDetails[0].email,
+                email : props.stockDetails.email,
                 company : companyInfo.Name,
                 ticker : companyInfo.Symbol,
                 newShares : e.target[0].value,
@@ -145,7 +145,7 @@ function UserSearch(props){
 
             const myHeaders = new Headers();
             myHeaders.append("Content-Type", "application/json");
-            const stock = props.stockDetails.find(e => e.ticker===requestBody.ticker);
+            const stock = props.stockDetails.data.find(e => e.ticker===requestBody.ticker);
             let method;
             if(transaction==='Buy'){
                 if(stock){
@@ -209,7 +209,7 @@ function UserSearch(props){
                 else askConfirmation('');
             }
             else{
-                let max = props.stockDetails.find(e => e.ticker===companyInfo.Symbol).shares
+                let max = props.stockDetails.data.find(e => e.ticker===companyInfo.Symbol).shares
                 if(inputValue.value>=1&&inputValue.value<=max){
                     askConfirmation(`${prefix} ${shares} ${company} for $${(average).toFixed(2)} (1 @ ${newRate}) ?`)
                 }
@@ -222,18 +222,10 @@ function UserSearch(props){
         askConfirmation('');
         setButtonClick(false)
     }
-    function Buy(){
-        return (<div><form onSubmit={updateBackend}>
-            <label htmlFor="quantity">Quantity: </label>
-            <input type="number" min="1" max="500" id="quantity" name="quantity" placeholder="No of Shares" onChange={onShareChange} required/><br />
-            <p>{confirmation}</p>
-            <button type="submit">Buy</button></form><button className="cancelButton" onClick={handleCancel}>Cancel</button>
-            </div>)
-    }
 
     function Transact(){
         let maximum = 500;
-        (transaction==='Sell') && (maximum = props.stockDetails.find(d => d.ticker===companyInfo.Symbol).shares)
+        (transaction==='Sell') && (maximum = props.stockDetails.data.find(d => d.ticker===companyInfo.Symbol).shares)
         return (<div><form onSubmit={updateBackend}>
             <label htmlFor="quantity">Quantity: </label>
             <input type="number" min="1" max={maximum} id="quantity" name="quantity" placeholder="No of Shares" onChange={onShareChange} required/><br />
